@@ -3,7 +3,10 @@ package com.crecheinfo.recyclerviewproject;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -21,9 +24,12 @@ public class DetailedActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detailed);
 
+        final FrameLayout progressBar = findViewById(R.id.progressbar);
+
+
         Intent intent = getIntent();
         String crecheId = intent.getStringExtra(Constants.CRECHE_ID);
-        int result = Integer.parseInt(crecheId);
+        int id = Integer.parseInt(crecheId);
 
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://7amzmvxi9j.execute-api.ap-southeast-1.amazonaws.com/Prod/")
@@ -32,14 +38,15 @@ public class DetailedActivity extends AppCompatActivity {
 
         CrecheService service = retrofit.create(CrecheService.class);
 
-        Call<Creche> creche = service.getCrecheDetails(result);
+        Call<Creche> creche = service.getCrecheDetails(id);
+        progressBar.setVisibility(View.VISIBLE);
 
         creche.enqueue(new Callback<Creche>() {
 
             @Override
             public void onResponse(Call<Creche> call, Response<Creche> response) {
                 Creche creche = response.body();
-
+                progressBar.setVisibility(View.GONE);
                 displayCreche(creche);
             }
 

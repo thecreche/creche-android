@@ -1,13 +1,20 @@
 package com.crecheinfo.recyclerviewproject;
 
+import android.app.LoaderManager;
 import android.content.ClipData;
+import android.content.CursorLoader;
 import android.content.Intent;
+import android.content.Loader;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.menu.MenuView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +25,9 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity{
+import static android.provider.UserDictionary.Words.CONTENT_URI;
+
+public class MainActivity extends AppCompatActivity {
 
 //    private final String android_version_name[] = {
 //            "Donut",
@@ -50,32 +59,48 @@ public class MainActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        final ProgressBar progressBar = findViewById(R.id.progressbar);
 
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://7amzmvxi9j.execute-api.ap-southeast-1.amazonaws.com/Prod/")
-                .addConverterFactory(GsonConverterFactory.create())
+                .baseUrl("https://7amzmvxi9j.execute-api.ap-southeast-1.amazonaws.com/Prod/")//*
+                .addConverterFactory(GsonConverterFactory.create())//*
                 .build();
 
-        CrecheService service = retrofit.create(CrecheService.class);
+        CrecheService service = retrofit.create(CrecheService.class);//CrecheService is API
 
-        Call<List<Creche>> creches = service.getCreches();
+        // Check for Internet network availability
+        // If internet available call the service to fetch data
+        // else show network unavailability error on screen
 
-        creches.enqueue(new Callback<List<Creche>>() {
+        InternetConnection internetConnection;
+        internetConnection = new InternetConnection(getApplicationContext());
+        if (internetConnection.isConnectingToInternet() == true) {
 
-            @Override
-            public void onResponse(Call<List<Creche>> call, Response<List<Creche>> response) {
-                List<Creche> crecheList = response.body();
+            Call<List<Creche>> creches = service.getCreches();//Calling Lists of Creches
+            progressBar.setVisibility(View.VISIBLE);
 
-                displayCreches(crecheList);
-            }
+            creches.enqueue(new Callback<List<Creche>>() {//meaning of enqueue is unknown
 
-            @Override
-            public void onFailure(Call<List<Creche>> call, Throwable t) {
+                @Override
+                public void onResponse(Call<List<Creche>> call, Response<List<Creche>> response) {
+                    List<Creche> crecheList = response.body();
+                    progressBar.setVisibility(View.GONE);
+                    displayCreches(crecheList);
+                }
+
+                @Override
+                public void onFailure(Call<List<Creche>> call, Throwable t) {
 
 
-            }
+                }
 
-        });
+            });
+        }
+        else {
+            TextView textView=findViewById(R.id.connectivity);
+
+
+        }
 
 
         //initViews();
